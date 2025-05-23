@@ -39,17 +39,7 @@ class PojoOutputParser<T> implements OutputParser<T> {
         if (isNullOrBlank(text)) {
             throw outputParsingException(text, type);
         }
-
-        try {
-            return Json.fromJson(text, type);
-        } catch (Exception ignored) {
-            try {
-                String jsonBlock = extractJsonBlock(text);
-                return Json.fromJson(jsonBlock, type);
-            } catch (Exception innerException) {
-                throw outputParsingException(text, type.getName(), innerException);
-            }
-        }
+        return extractAndParseJson(type, text);
     }
 
     @Override
@@ -159,5 +149,65 @@ class PojoOutputParser<T> implements OutputParser<T> {
             }
             throw illegalConfiguration("Illegal method return type: " + returnType);
         }
+    }
+
+    private T extractAndParseJson(Class<T> type, String text) {
+        Exception parseException = null;
+        try {
+            return Json.fromJson(text, type);
+        } catch (Exception ignored) {
+            parseException = ignored;
+        }
+
+        int index = 0;
+        while (true) {
+
+            int jsonStart = findJsonStart(text, index);
+            if (jsonStart < 0) {
+                throw outputParsingException(text, type.getName(), parseException);
+            }
+
+            int jsonEnd = findJsonEnd(text, jsonStart, text.charAt(jsonStart));
+            if (jsonEnd < 0) {
+                throw outputParsingException(text, type.getName(), parseException);
+            }
+
+            try {
+                return Json.fromJson(text.substring(jsonStart, jsonEnd+1), type);
+            } catch (Exception ignored) {
+                // If parsing fails, try to extract a JSON block from the text
+            }
+            index = jsonEnd + 1; // Move to the next character after the found JSON block
+        }
+    }
+
+    private int findJsonStart(String text, int fromIndex) {
+        int jsonMapStart = text.indexOf('{', fromIndex);
+        int jsonListStart = text.indexOf('[', fromIndex);
+        if (jsonMapStart < 0) {
+            return jsonListStart;
+        }
+        if (jsonListStart < 0) {
+            return jsonMapStart;
+        }
+        return Math.min(jsonMapStart, jsonListStart);
+    }
+
+    private int findJsonEnd(String text, int jsonStart, char openingBrace) {
+        char closingBrace = openingBrace == '{' ? '}' : ']';
+        int braceCount = 0;
+
+        for (int i = jsonStart; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == openingBrace) {
+                braceCount++;
+            } else if (c == closingBrace) {
+                braceCount--;
+                if (braceCount == 0) {
+                    return i;
+                }
+            }
+        }
+        return -1;
     }
 }
