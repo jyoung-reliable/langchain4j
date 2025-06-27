@@ -1,0 +1,47 @@
+{
+  "platform": "github",
+  "packageRules": [
+    {
+      "matchDepTypes": [
+        "devDependencies",
+        "test",
+        "plugin"
+      ],
+      "enabled": false
+    },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    },
+    {
+      "matchPackagePatterns": [
+        ".*"
+      ],
+      "matchManagers": [
+        "npm",
+        "maven",
+        "gradle"
+      ],
+      "matchUpdateTypes": [
+        "digest",
+        "pin",
+        "rollback",
+        "lockFileMaintenance"
+      ],
+      "enabled": true
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": [
+      "security"
+    ],
+    "enabled": true
+  },
+  "extends": [
+    "config:recommended"
+  ],
+  "onboarding": false,
+  "gitAuthor": "jyoung-reliable <jyoung-reliable@users.noreply.github.com>"
+}
