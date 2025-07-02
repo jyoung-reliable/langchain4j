@@ -1,0 +1,8 @@
+{
+  "platform": "github",
+  "extends": [
+    "config:recommended"
+  ],
+  "onboarding": false,
+  "gitAuthor": "jyoung-reliable <jyoung-reliable@users.noreply.github.com>"
+}
